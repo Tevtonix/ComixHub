@@ -1,11 +1,22 @@
-from pydantic import BaseModel
-from datetime import datetime
+from pydantic import BaseModel, EmailStr
 from typing import Optional
+from datetime import datetime
 
-class ComicCreate(BaseModel):
-    title: str
-    description: Optional[str] = None
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    is_author: bool = False
 
-class ComicRead(ComicCreate):
+class UserRead(BaseModel):
     id: int
-    created_at: datetime
+    username: str
+    email: str
+    is_author: bool
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+class TokenData(BaseModel):
+    username: Optional[str] = None

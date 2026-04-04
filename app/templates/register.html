@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Регистрация</h2>
+
+{% if error %}
+    <p style="color: red;">{{ error }}</p>
+{% endif %}
+
+<form method="post" action="/auth/register">
+    <p><input type="text" name="username" placeholder="Имя пользователя" required></p>
+    <p><input type="email" name="email" placeholder="Email" required></p>
+    <p><input type="password" name="password" placeholder="Пароль" required></p>
+    <p><label><input type="checkbox" name="is_author" value="true"> Я автор</label></p>
+    <button type="submit">Зарегистрироваться</button>
+</form>
+<p>Уже есть аккаунт? <a href="/auth/login">Войти</a></p>
+{% endblock %}
