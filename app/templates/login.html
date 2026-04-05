@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Вход в аккаунт</h2>
+
+{% if request.query_params.get('error') == 'invalid' %}
+    <p style="color: red;">Неверное имя пользователя или пароль</p>
+{% endif %}
+
+<form method="post" action="/auth/login">
+    <p><input type="text" name="username" placeholder="Имя пользователя" required></p>
+    <p><input type="password" name="password" placeholder="Пароль" required></p>
+    <button type="submit">Войти</button>
+</form>
+<p>Нет аккаунта? <a href="/auth/register">Зарегистрироваться</a></p>
+{% endblock %}
