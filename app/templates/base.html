@@ -7,9 +7,23 @@
 </head>
 <body>
     <header>
-        <h1>ComixHub</h1>
-        <nav><a href="/">Главная</a> | <a href="/comics/new">+ Новый комикс</a>
-        <a href="/auth/register">Регистрация</a> | <a href="/auth/login">Вход</a></nav>
+        <h1><a href="/">ComixHub</a></h1>
+        <nav>
+            <a href="/">Главная</a> |
+            <a href="/comics/">Комиксы</a> |
+            <a href="/comics/new">+ Новый комикс</a>
+            
+            {% if current_user %}
+                | Привет, <strong>{{ current_user.username }}</strong>
+                {% if current_user.is_author %}
+                    (Автор)
+                {% endif %}
+                | <a href="/auth/logout">Выход</a>
+            {% else %}
+                | <a href="/auth/register">Регистрация</a> |
+                <a href="/auth/login">Вход</a>
+            {% endif %}
+        </nav>
     </header>
     <main>
         {% block content %}{% endblock %}

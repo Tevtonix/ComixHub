@@ -1,14 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Комиксы</h2>
-{% if comics %}
-    <ul>
-    {% for comic in comics %}
-        <li><strong>{{ comic.title }}</strong> — {{ comic.description|truncate(100) }}</li>
-    {% endfor %}
-    </ul>
+<h2>Добро пожаловать в ComixHub!</h2>
+
+{% if current_user %}
+    <p>Вы вошли как <strong>{{ current_user.username }}</strong></p>
+    {% if current_user.is_author %}
+        <p>Вы можете публиковать свои комиксы.</p>
+    {% endif %}
 {% else %}
-    <p>Пока нет комиксов. Стань первым автором!</p>
+    <p>Пожалуйста, <a href="/auth/login">войдите</a> или <a href="/auth/register">зарегистрируйтесь</a>, чтобы публиковать и комментировать.</p>
 {% endif %}
+
+<h3>Последние комиксы</h3>
+<!-- список комиксов сюда -->
 {% endblock %}
