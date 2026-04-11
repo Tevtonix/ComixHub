@@ -22,7 +22,11 @@
                     Нет обложки
                 </div>
             {% endif %}
-            <h4>{{ comic.title }}</h4>
+            <h4>
+                <a href="/comics/{{ comic.id }}" style="text-decoration: none; color: inherit;">
+                    {{ comic.title }}
+                </a>
+            </h4>
             <small>Автор #{{ comic.author_id }}</small>
             <p style="font-size: 0.9em;">{{ comic.description|truncate(80) }}</p>
         </div>
