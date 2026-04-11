@@ -103,3 +103,72 @@ async def get_comic(
         "current_user": current_user,
         "title": comic.title
     })
+
+
+@router.get("/{comic_id}/chapters/new", response_class=HTMLResponse)
+async def new_chapter_form(
+    comic_id: int,
+    request: Request,
+    current_user: Optional[User] = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    if not current_user or not current_user.is_author:
+        raise HTTPException(status_code=403, detail="Только авторы могут добавлять главы")
+
+    comic = session.exec(select(Comic).where(Comic.id == comic_id)).first()
+    if not comic or comic.author_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Вы можете добавлять главы только к своим комиксам")
+
+    return templates.TemplateResponse("chapter_form.html", {
+        "request": request,
+        "comic": comic,
+        "current_user": current_user
+    })
+
+
+@router.post("/{comic_id}/chapters")
+async def create_chapter(
+    comic_id: int,
+    chapter_number: int = Form(...),
+    title: str = Form(...),
+    pages: list[UploadFile] = File(...),
+    current_user: Optional[User] = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    if not current_user or not current_user.is_author:
+        raise HTTPException(status_code=403, detail="Только авторы могут добавлять главы")
+
+    comic = session.exec(select(Comic).where(Comic.id == comic_id)).first()
+    if not comic or comic.author_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Вы можете добавлять главы только к своим комиксам")
+
+    chapter_dir = Path(f"static/uploads/chapters/{comic_id}/{chapter_number}")
+    chapter_dir.mkdir(parents=True, exist_ok=True)
+
+    page_paths = []
+    for page in pages:
+        if page.filename:
+            file_ext = page.filename.split(".")[-1].lower()
+            unique_name = f"{uuid.uuid4()}.{file_ext}"
+            file_path = chapter_dir / unique_name
+
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(page.file, buffer)
+
+            page_paths.append(f"/static/uploads/chapters/{comic_id}/{chapter_number}/{unique_name}")
+
+    import json
+    pages_json = json.dumps(page_paths)
+
+    new_chapter = Chapter(
+        comic_id=comic_id,
+        chapter_number=chapter_number,
+        title=title,
+        pages=pages_json
+    )
+
+    session.add(new_chapter)
+    session.commit()
+    session.refresh(new_chapter)
+
+    return RedirectResponse(url=f"/comics/{comic_id}", status_code=303)

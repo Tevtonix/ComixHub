@@ -28,9 +28,15 @@
 
     <hr style="margin: 30px 0;">
     
-    <h3>Главы</h3>
-    <p style="color: #666;">Пока главы не добавлены. Эта функция будет в следующем спринте.</p>
-    
+        <h3>Главы</h3>
+    {% if comic.chapters %}   <!-- позже добавим связь -->
+        <!-- список глав будет здесь -->
+    {% else %}
+        <p>Пока нет глав.</p>
+        {% if current_user and current_user.id == comic.author_id %}
+            <a href="/comics/{{ comic.id }}/chapters/new">+ Добавить первую главу</a>
+        {% endif %}
+    {% endif %}
     <!-- Здесь позже появятся главы и комментарии -->
     
 </div>

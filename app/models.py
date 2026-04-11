@@ -26,3 +26,12 @@ class Comic(SQLModel, table=True):
     cover_image: Optional[str] = None          # ← новое поле: путь к обложке
     author_id: Optional[int] = Field(default=None, foreign_key="user.id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Chapter(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    comic_id: int = Field(foreign_key="comic.id")
+    chapter_number: int
+    title: str = Field(max_length=200)
+    # Для хранения страниц будем использовать JSON поле (список путей к изображениям)
+    pages: Optional[str] = Field(default=None)   # храним как JSON строку: ["path1.jpg", "path2.jpg", ...]
+    created_at: datetime = Field(default_factory=datetime.utcnow)
