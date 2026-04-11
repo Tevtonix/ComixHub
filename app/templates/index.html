@@ -1,17 +1,35 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Добро пожаловать в ComixHub!</h2>
+<h2>Добро пожаловать в ComixHub</h2>
 
 {% if current_user %}
-    <p>Вы вошли как <strong>{{ current_user.username }}</strong></p>
-    {% if current_user.is_author %}
-        <p>Вы можете публиковать свои комиксы.</p>
-    {% endif %}
+    <p>Привет, <strong>{{ current_user.username }}</strong>!</p>
 {% else %}
-    <p>Пожалуйста, <a href="/auth/login">войдите</a> или <a href="/auth/register">зарегистрируйтесь</a>, чтобы публиковать и комментировать.</p>
+    <p><a href="/auth/login">Войдите</a>, чтобы публиковать комиксы.</p>
 {% endif %}
 
-<h3>Последние комиксы</h3>
-<!-- список комиксов сюда -->
+<h3>Опубликованные комиксы</h3>
+
+{% if comics %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px;">
+    {% for comic in comics %}
+        <div style="border: 1px solid #ccc; padding: 10px; text-align: center;">
+            {% if comic.cover_image %}
+                <img src="{{ comic.cover_image }}" alt="{{ comic.title }}" style="max-width: 100%; height: auto; border-radius: 8px;">
+            {% else %}
+                <div style="width: 160px; height: 220px; background: #eee; margin: 0 auto; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    Нет обложки
+                </div>
+            {% endif %}
+            <h4>{{ comic.title }}</h4>
+            <small>Автор #{{ comic.author_id }}</small>
+            <p style="font-size: 0.9em;">{{ comic.description|truncate(80) }}</p>
+        </div>
+    {% endfor %}
+    </div>
+{% else %}
+    <p>Пока нет комиксов. Стань первым автором!</p>
+{% endif %}
+
 {% endblock %}
