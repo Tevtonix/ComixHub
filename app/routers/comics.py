@@ -1,21 +1,25 @@
 from fastapi import APIRouter, Depends, Request, Form, HTTPException, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import Session, select
-from typing import Optional
+from typing import Optional, List
 import shutil
 from pathlib import Path
 import uuid
+import json
 
 from app.database import get_session
-from app.models import Comic, User
+from app.models import Comic, User, Chapter, Comment   # ← добавили Comment
 from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/comics", tags=["comics"])
 
-UPLOAD_DIR = Path("static/uploads/covers")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+UPLOAD_DIR_COVERS = Path("static/uploads/covers")
+UPLOAD_DIR_CHAPTERS = Path("static/uploads/chapters")
+UPLOAD_DIR_COVERS.mkdir(parents=True, exist_ok=True)
+UPLOAD_DIR_CHAPTERS.mkdir(parents=True, exist_ok=True)
 
 
+# ====================== Список комиксов ======================
 @router.get("/", response_class=HTMLResponse)
 async def list_comics(
     request: Request,
@@ -34,57 +38,7 @@ async def list_comics(
     )
 
 
-@router.get("/new", response_class=HTMLResponse)
-async def new_comic_form(
-    request: Request,
-    current_user: Optional[User] = Depends(get_current_user)
-):
-    if not current_user or not current_user.is_author:
-        raise HTTPException(status_code=403, detail="Только авторы могут публиковать комиксы")
-    
-    return templates.TemplateResponse("comic_form.html", {
-        "request": request,
-        "current_user": current_user
-    })
-
-
-@router.post("/")
-async def create_comic(
-    request: Request,
-    title: str = Form(...),
-    description: str = Form(None),
-    cover: UploadFile = File(None),
-    current_user: Optional[User] = Depends(get_current_user),
-    session: Session = Depends(get_session)
-):
-    if not current_user or not current_user.is_author:
-        raise HTTPException(status_code=403, detail="Только авторы могут публиковать комиксы")
-
-    cover_path = None
-    if cover and cover.filename:
-        # Создаём уникальное имя файла
-        file_ext = cover.filename.split(".")[-1].lower()
-        unique_name = f"{uuid.uuid4()}.{file_ext}"
-        file_path = UPLOAD_DIR / unique_name
-        
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(cover.file, buffer)
-        
-        cover_path = f"/static/uploads/covers/{unique_name}"
-
-    new_comic = Comic(
-        title=title,
-        description=description,
-        cover_image=cover_path,
-        author_id=current_user.id
-    )
-    
-    session.add(new_comic)
-    session.commit()
-    session.refresh(new_comic)
-
-    return RedirectResponse(url="/comics/", status_code=303)
-
+# ====================== Детальная страница комикса ======================
 @router.get("/{comic_id}", response_class=HTMLResponse)
 async def get_comic(
     comic_id: int,
@@ -93,10 +47,9 @@ async def get_comic(
     session: Session = Depends(get_session)
 ):
     comic = session.exec(select(Comic).where(Comic.id == comic_id)).first()
-    
     if not comic:
         raise HTTPException(status_code=404, detail="Комикс не найден")
-    
+
     return templates.TemplateResponse("comic_detail.html", {
         "request": request,
         "comic": comic,
@@ -105,6 +58,7 @@ async def get_comic(
     })
 
 
+# ====================== Форма создания главы ======================
 @router.get("/{comic_id}/chapters/new", response_class=HTMLResponse)
 async def new_chapter_form(
     comic_id: int,
@@ -126,12 +80,13 @@ async def new_chapter_form(
     })
 
 
+# ====================== Создание главы ======================
 @router.post("/{comic_id}/chapters")
 async def create_chapter(
     comic_id: int,
     chapter_number: int = Form(...),
     title: str = Form(...),
-    pages: list[UploadFile] = File(...),
+    pages: List[UploadFile] = File(...),
     current_user: Optional[User] = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
@@ -142,33 +97,92 @@ async def create_chapter(
     if not comic or comic.author_id != current_user.id:
         raise HTTPException(status_code=403, detail="Вы можете добавлять главы только к своим комиксам")
 
-    chapter_dir = Path(f"static/uploads/chapters/{comic_id}/{chapter_number}")
+    chapter_dir = UPLOAD_DIR_CHAPTERS / str(comic_id) / str(chapter_number)
     chapter_dir.mkdir(parents=True, exist_ok=True)
 
     page_paths = []
     for page in pages:
         if page.filename:
-            file_ext = page.filename.split(".")[-1].lower()
-            unique_name = f"{uuid.uuid4()}.{file_ext}"
-            file_path = chapter_dir / unique_name
+            ext = page.filename.split(".")[-1].lower()
+            filename = f"{uuid.uuid4()}.{ext}"
+            file_path = chapter_dir / filename
 
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(page.file, buffer)
 
-            page_paths.append(f"/static/uploads/chapters/{comic_id}/{chapter_number}/{unique_name}")
-
-    import json
-    pages_json = json.dumps(page_paths)
+            page_paths.append(f"/static/uploads/chapters/{comic_id}/{chapter_number}/{filename}")
 
     new_chapter = Chapter(
         comic_id=comic_id,
         chapter_number=chapter_number,
         title=title,
-        pages=pages_json
+        pages=json.dumps(page_paths)
     )
 
     session.add(new_chapter)
     session.commit()
-    session.refresh(new_chapter)
 
     return RedirectResponse(url=f"/comics/{comic_id}", status_code=303)
+
+
+# ====================== Чтение главы + комментарии ======================
+@router.get("/{comic_id}/chapters/{chapter_id}/read", response_class=HTMLResponse)
+async def read_chapter(
+    comic_id: int,
+    chapter_id: int,
+    request: Request,
+    current_user: Optional[User] = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    chapter = session.exec(select(Chapter).where(Chapter.id == chapter_id)).first()
+
+    if not chapter or chapter.comic_id != comic_id:
+        raise HTTPException(status_code=404, detail="Глава не найдена")
+
+    pages = chapter.get_pages()
+
+    # Загружаем комментарии
+    comments = session.exec(
+        select(Comment)
+        .where(Comment.chapter_id == chapter_id)
+        .order_by(Comment.created_at.desc())
+    ).all()
+
+    return templates.TemplateResponse("chapter_read.html", {
+        "request": request,
+        "chapter": chapter,
+        "pages": pages,
+        "comments": comments,
+        "current_user": current_user,
+        "comic_id": comic_id,
+        "title": f"{chapter.title} — ComixHub"
+    })
+
+
+# ====================== Добавление комментария ======================
+@router.post("/{comic_id}/chapters/{chapter_id}/comment")
+async def add_comment(
+    comic_id: int,
+    chapter_id: int,
+    text: str = Form(...),
+    rating: Optional[int] = Form(None),
+    current_user: Optional[User] = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Необходимо войти в аккаунт")
+
+    comment = Comment(
+        chapter_id=chapter_id,
+        user_id=current_user.id,
+        text=text,
+        rating=rating
+    )
+
+    session.add(comment)
+    session.commit()
+
+    return RedirectResponse(
+        url=f"/comics/{comic_id}/chapters/{chapter_id}/read", 
+        status_code=303
+    )
