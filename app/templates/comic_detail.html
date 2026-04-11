@@ -28,16 +28,27 @@
 
     <hr style="margin: 30px 0;">
     
-        <h3>Главы</h3>
-    {% if comic.chapters %}   <!-- позже добавим связь -->
-        <!-- список глав будет здесь -->
+    <h3>Главы комикса</h3>
+    
+    {% if comic.chapters %}
+        <ul>
+        {% for chapter in comic.chapters %}
+            <li>
+                <a href="/comics/{{ comic.id }}/chapters/{{ chapter.id }}/read">
+                    Глава {{ chapter.chapter_number }} — {{ chapter.title }}
+                </a>
+            </li>
+        {% endfor %}
+        </ul>
     {% else %}
-        <p>Пока нет глав.</p>
-        {% if current_user and current_user.id == comic.author_id %}
-            <a href="/comics/{{ comic.id }}/chapters/new">+ Добавить первую главу</a>
-        {% endif %}
+        <p>Пока нет опубликованных глав.</p>
     {% endif %}
-    <!-- Здесь позже появятся главы и комментарии -->
+
+    {% if current_user and current_user.id == comic.author_id %}
+        <p style="margin-top: 15px;">
+            <a href="/comics/{{ comic.id }}/chapters/new">+ Добавить новую главу</a>
+        </p>
+    {% endif %}
     
 </div>
 {% endblock %}
