@@ -122,3 +122,8 @@ async def login(
     )
 
     return RedirectResponse(url="/", status_code=303)
+
+@router.get("/logout")
+async def logout(response: Response):
+    response.delete_cookie(key="access_token")
+    return RedirectResponse(url="/", status_code=303)
