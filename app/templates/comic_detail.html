@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    
+    <a href="/comics/" style="display: inline-block; margin-bottom: 20px;">← Назад к списку комиксов</a>
+    
+    <h1>{{ comic.title }}</h1>
+    
+    {% if comic.cover_image %}
+        <img src="{{ comic.cover_image }}" 
+             alt="{{ comic.title }}" 
+             style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    {% else %}
+        <div style="width: 100%; height: 400px; background: #f0f0f0; border-radius: 12px; 
+                    display: flex; align-items: center; justify-content: center; font-size: 1.2em;">
+            Обложка отсутствует
+        </div>
+    {% endif %}
+    
+    <div style="margin-top: 25px;">
+        <p><strong>Автор:</strong> #{{ comic.author_id }}</p>
+        {% if comic.description %}
+            <h3>Описание</h3>
+            <p style="line-height: 1.6;">{{ comic.description }}</p>
+        {% endif %}
+    </div>
+
+    <hr style="margin: 30px 0;">
+    
+    <h3>Главы</h3>
+    <p style="color: #666;">Пока главы не добавлены. Эта функция будет в следующем спринте.</p>
+    
+    <!-- Здесь позже появятся главы и комментарии -->
+    
+</div>
+{% endblock %}

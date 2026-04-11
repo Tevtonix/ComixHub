@@ -84,3 +84,22 @@ async def create_comic(
     session.refresh(new_comic)
 
     return RedirectResponse(url="/comics/", status_code=303)
+
+@router.get("/{comic_id}", response_class=HTMLResponse)
+async def get_comic(
+    comic_id: int,
+    request: Request,
+    current_user: Optional[User] = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    comic = session.exec(select(Comic).where(Comic.id == comic_id)).first()
+    
+    if not comic:
+        raise HTTPException(status_code=404, detail="Комикс не найден")
+    
+    return templates.TemplateResponse("comic_detail.html", {
+        "request": request,
+        "comic": comic,
+        "current_user": current_user,
+        "title": comic.title
+    })
