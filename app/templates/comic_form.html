@@ -1,18 +1,25 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Опубликовать комикс</h2>
-<form method="POST" action="/comics/">
+<h2>Опубликовать новый комикс</h2>
+
+{% if current_user %}
+    <p>Публикует: <strong>{{ current_user.username }}</strong></p>
+{% endif %}
+
+<form method="post" action="/comics/">
     <p>
-        <label>Название:<br>
-            <input type="text" name="title" required>
+        <label>Название комикса:<br>
+            <input type="text" name="title" required style="width: 400px;">
         </label>
     </p>
     <p>
         <label>Описание:<br>
-            <textarea name="description" rows="5"></textarea>
+            <textarea name="description" rows="6" style="width: 400px;"></textarea>
         </label>
     </p>
-    <button type="submit">Опубликовать</button>
+    <button type="submit">Опубликовать комикс</button>
 </form>
+
+<a href="/comics/">← Назад к списку</a>
 {% endblock %}
