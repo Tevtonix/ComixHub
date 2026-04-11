@@ -18,3 +18,11 @@ class User(SQLModel, table=True):
     hashed_password: str
     is_author: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Comic(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str = Field(max_length=200)
+    description: Optional[str] = None
+    cover_image: Optional[str] = None          # ← новое поле: путь к обложке
+    author_id: Optional[int] = Field(default=None, foreign_key="user.id")
+    created_at: datetime = Field(default_factory=datetime.utcnow)

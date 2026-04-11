@@ -1,27 +1,30 @@
-from fastapi import APIRouter, Depends, Request, Form, HTTPException
+from fastapi import APIRouter, Depends, Request, Form, HTTPException, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import Session, select
 from typing import Optional
+import shutil
+from pathlib import Path
+import uuid
 
 from app.database import get_session
 from app.models import Comic, User
 from app.routers.auth import get_current_user
-from app.templates import templates   # если templates вынесен, иначе импортируем ниже
 
 router = APIRouter(prefix="/comics", tags=["comics"])
 
+UPLOAD_DIR = Path("static/uploads/covers")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-# ====================== Список комиксов ======================
+
 @router.get("/", response_class=HTMLResponse)
 async def list_comics(
-    request: Request, 
+    request: Request,
     current_user: Optional[User] = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     comics = session.exec(select(Comic)).all()
-    
     return templates.TemplateResponse(
-        "index.html", 
+        "index.html",
         {
             "request": request,
             "comics": comics,
@@ -31,17 +34,13 @@ async def list_comics(
     )
 
 
-# ====================== Форма создания комикса ======================
 @router.get("/new", response_class=HTMLResponse)
 async def new_comic_form(
-    request: Request, 
+    request: Request,
     current_user: Optional[User] = Depends(get_current_user)
 ):
     if not current_user or not current_user.is_author:
-        raise HTTPException(
-            status_code=403, 
-            detail="Только авторы могут публиковать комиксы. Пожалуйста, войдите как автор."
-        )
+        raise HTTPException(status_code=403, detail="Только авторы могут публиковать комиксы")
     
     return templates.TemplateResponse("comic_form.html", {
         "request": request,
@@ -49,21 +48,34 @@ async def new_comic_form(
     })
 
 
-# ====================== Создание комикса ======================
 @router.post("/")
 async def create_comic(
     request: Request,
     title: str = Form(...),
     description: str = Form(None),
+    cover: UploadFile = File(None),
     current_user: Optional[User] = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     if not current_user or not current_user.is_author:
         raise HTTPException(status_code=403, detail="Только авторы могут публиковать комиксы")
 
+    cover_path = None
+    if cover and cover.filename:
+        # Создаём уникальное имя файла
+        file_ext = cover.filename.split(".")[-1].lower()
+        unique_name = f"{uuid.uuid4()}.{file_ext}"
+        file_path = UPLOAD_DIR / unique_name
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(cover.file, buffer)
+        
+        cover_path = f"/static/uploads/covers/{unique_name}"
+
     new_comic = Comic(
         title=title,
         description=description,
+        cover_image=cover_path,
         author_id=current_user.id
     )
     
