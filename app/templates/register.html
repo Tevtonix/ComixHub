@@ -1,18 +1,50 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Регистрация</h2>
+<div style="max-width: 460px; margin: 60px auto;">
 
-{% if error %}
-    <p style="color: red;">{{ error }}</p>
-{% endif %}
+  <div style="font-family: var(--font-crt); font-size: 0.78em; color: var(--text-dim);
+              letter-spacing: 0.25em; margin-bottom: 16px; text-align: center;">
+    // СОЗДАНИЕ НОВОГО ОПЕРАТИВНИКА //
+  </div>
 
-<form method="post" action="/auth/register">
-    <p><input type="text" name="username" placeholder="Имя пользователя" required></p>
-    <p><input type="email" name="email" placeholder="Email" required></p>
-    <p><input type="password" name="password" placeholder="Пароль" required></p>
-    <p><label><input type="checkbox" name="is_author" value="true"> Я автор</label></p>
-    <button type="submit">Зарегистрироваться</button>
-</form>
-<p>Уже есть аккаунт? <a href="/auth/login">Войти</a></p>
+  <h2 style="text-align: center; margin-bottom: 30px; font-size: 1.1em; letter-spacing: 0.3em;">
+    РЕГИСТРАЦИЯ
+  </h2>
+
+  {% if error %}
+    <div class="msg-error">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="/auth/register">
+    <p>
+      <label>// Позывной</label>
+      <input type="text" name="username" placeholder="username" required>
+    </p>
+    <p>
+      <label>// Email</label>
+      <input type="email" name="email" placeholder="operative@example.com" required>
+    </p>
+    <p>
+      <label>// Код доступа</label>
+      <input type="password" name="password" placeholder="••••••••" required>
+    </p>
+    <p style="display: flex; align-items: center; gap: 10px; border: 1px solid var(--border);
+              padding: 12px; background: rgba(0,255,65,0.02);">
+      <input type="checkbox" name="is_author" value="true" id="is_author">
+      <label for="is_author" style="margin: 0; cursor: pointer; text-transform: none; letter-spacing: 0.05em;">
+        Зарегистрироваться как <span class="badge author" style="margin-left: 4px;">Автор</span>
+      </label>
+    </p>
+    <div style="margin-top: 24px;">
+      <button type="submit" style="width: 100%;">[ СОЗДАТЬ АККАУНТ ]</button>
+    </div>
+  </form>
+
+  <p style="text-align: center; margin-top: 20px; font-size: 0.82em; color: var(--text-dim);">
+    Уже есть аккаунт?
+    <a href="/auth/login" style="letter-spacing: 0.1em;">[ ВОЙТИ ]</a>
+  </p>
+
+</div>
 {% endblock %}

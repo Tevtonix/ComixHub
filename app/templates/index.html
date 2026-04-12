@@ -3,81 +3,109 @@
 {% block content %}
 <div style="max-width: 1200px; margin: 0 auto;">
 
-    <h2 style="margin-bottom: 10px;">Добро пожаловать в ComixHub</h2>
-
+  <!-- WELCOME HEADER -->
+  <div style="margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+    <div style="font-family: var(--font-crt); font-size: 0.78em; color: var(--text-dim);
+                letter-spacing: 0.25em; margin-bottom: 8px;">
+      // OPERATIVE BRIEFING //
+    </div>
+    <h2 style="font-size: 1.4em; margin-bottom: 10px;">
+      Добро пожаловать в ComixHub
+    </h2>
     {% if current_user %}
-        <p style="margin-bottom: 25px; font-size: 1.1em;">
-            Привет, <strong>{{ current_user.username }}</strong>!
-        </p>
+      <p style="color: var(--text-dim); font-size: 0.9em;">
+        Статус: <span style="color: var(--green);">АКТИВЕН</span>
+        &nbsp;|&nbsp; Оперативник: <strong>{{ current_user.username }}</strong>
+      </p>
     {% else %}
-        <p style="margin-bottom: 25px;">
-            <a href="/auth/login">Войдите</a>, чтобы публиковать комиксы и оставлять комментарии.
-        </p>
+      <p style="color: var(--text-dim); font-size: 0.88em;">
+        <a href="/auth/login">[ АВТОРИЗАЦИЯ ]</a> — необходима для публикации комиксов и комментариев.
+      </p>
     {% endif %}
+  </div>
 
-    <!-- Форма поиска -->
-    <form method="get" action="/comics/" style="margin-bottom: 35px;">
-        <div style="display: flex; max-width: 700px;">
-            <input type="text" 
-                   name="q" 
-                   value="{{ search_query }}" 
-                   placeholder="Поиск по названию, описанию или автору..." 
-                   style="flex: 1; padding: 14px; font-size: 1.1em; border: 2px solid #ddd; border-radius: 12px 0 0 12px;">
-            <button type="submit" 
-                    style="padding: 0 28px; border-radius: 0 12px 12px 0;">
-                Найти
-            </button>
-        </div>
-        {% if search_query %}
-            <a href="/comics/" style="margin-top: 8px; display: inline-block; color: #6b21a8;">
-                ← Сбросить поиск
-            </a>
-        {% endif %}
-    </form>
+  <!-- SEARCH -->
+  <form method="get" action="/comics/" style="margin-bottom: 36px;">
+    <div style="font-family: var(--font-crt); font-size: 0.75em; color: var(--text-dim);
+                letter-spacing: 0.2em; margin-bottom: 8px;">
+      // ПОИСК В БАЗЕ ДАННЫХ
+    </div>
+    <div style="display: flex; max-width: 700px;">
+      <input type="text"
+             name="q"
+             value="{{ search_query }}"
+             placeholder="ввод запроса: название, описание, автор..."
+             style="flex: 1; padding: 14px; font-size: 0.95em;
+                    border-radius: 0; border-right: none;">
+      <button type="submit">Поиск</button>
+    </div>
+    {% if search_query %}
+      <a href="/comics/" style="margin-top: 10px; display: inline-block;
+                                color: var(--text-dim); font-size: 0.8em;
+                                letter-spacing: 0.1em;">
+        ◁ СБРОСИТЬ ЗАПРОС
+      </a>
+    {% endif %}
+  </form>
 
-    <h3 style="margin-bottom: 20px;">
-        {{ "Результаты поиска" if search_query else "Опубликованные комиксы" }}
+  <!-- SECTION TITLE -->
+  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+    <span style="color: var(--green-dark); font-family: var(--font-crt); font-size: 1.2em;">//</span>
+    <h3 style="font-size: 0.9em; letter-spacing: 0.2em;">
+      {{ "РЕЗУЛЬТАТЫ: " ~ search_query if search_query else "ДОСТУПНЫЕ ОБЪЕКТЫ" }}
     </h3>
-
     {% if comics %}
-        <div class="comic-grid">
-        {% for comic in comics %}
-            <div class="comic-card">
-                {% if comic.cover_image %}
-                    <img src="{{ comic.cover_image }}" 
-                         alt="{{ comic.title }}">
-                {% else %}
-                    <div style="width: 100%; height: 300px; background: #f1f1f1; 
-                                display: flex; align-items: center; justify-content: center; color: #999;">
-                        Нет обложки
-                    </div>
-                {% endif %}
-                
-                <div class="info">
-                    <h4>
-                        <a href="/comics/{{ comic.id }}">{{ comic.title }}</a>
-                    </h4>
-                    <p>
-                        Автор: <strong>{{ comic.author.username if comic.author else 'Неизвестен' }}</strong>
-                    </p>
-                    {% if comic.description %}
-                        <p style="margin-top: 10px; font-size: 0.9em; color: #555;">
-                            {{ comic.description|truncate(100) }}
-                        </p>
-                    {% endif %}
-                </div>
-            </div>
-        {% endfor %}
-        </div>
-    {% else %}
-        <p style="font-size: 1.2em; color: #666; text-align: center; margin-top: 50px;">
-            {% if search_query %}
-                Ничего не найдено по запросу "{{ search_query }}"
-            {% else %}
-                Пока нет опубликованных комиксов. Стань первым автором!
-            {% endif %}
-        </p>
+      <span style="color: var(--text-dim); font-family: var(--font-crt);
+                   font-size: 0.8em; margin-left: auto;">
+        Найдено: {{ comics|length }}
+      </span>
     {% endif %}
+  </div>
+
+  <!-- COMICS GRID -->
+  {% if comics %}
+    <div class="comic-grid">
+      {% for comic in comics %}
+        <div class="comic-card">
+          {% if comic.cover_image %}
+            <img src="{{ comic.cover_image }}" alt="{{ comic.title }}">
+          {% else %}
+            <div style="width: 100%; height: 300px; background: var(--bg3);
+                        display: flex; align-items: center; justify-content: center;
+                        color: var(--green-dark); font-family: var(--font-crt);
+                        font-size: 0.9em; letter-spacing: 0.1em; flex-direction: column; gap: 8px;">
+              <span style="font-size: 2em; opacity:0.3;">◈</span>
+              [NO_COVER_DATA]
+            </div>
+          {% endif %}
+          <div class="info">
+            <h4><a href="/comics/{{ comic.id }}">{{ comic.title }}</a></h4>
+            <p>
+              <span style="color: var(--green-dark);">Авт:</span>
+              {{ comic.author.username if comic.author else 'НЕИЗВЕСТЕН' }}
+            </p>
+            {% if comic.description %}
+              <p style="margin-top: 8px; font-size: 0.8em; color: var(--text-dim);">
+                {{ comic.description|truncate(90) }}
+              </p>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 60px 20px; border: 1px dashed var(--border);">
+      <div style="font-family: var(--font-crt); font-size: 1.8em; color: var(--green-dark);
+                  margin-bottom: 12px;">[ НЕТ ДАННЫХ ]</div>
+      <p style="color: var(--text-dim); font-size: 0.9em;">
+        {% if search_query %}
+          Записей по запросу «{{ search_query }}» не обнаружено.
+        {% else %}
+          База пуста. Станьте первым оперативником-автором.
+        {% endif %}
+      </p>
+    </div>
+  {% endif %}
 
 </div>
 {% endblock %}

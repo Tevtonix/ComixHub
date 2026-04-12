@@ -1,26 +1,51 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Мои закладки</h2>
+<div style="max-width: 1200px; margin: 0 auto;">
 
-{% if comics %}
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px;">
-    {% for comic in comics %}
-        <div style="border: 1px solid #ddd; padding: 12px; border-radius: 12px;">
-            {% if comic.cover_image %}
-                <img src="{{ comic.cover_image }}" alt="{{ comic.title }}" 
-                     style="width: 100%; height: 260px; object-fit: cover; border-radius: 8px;">
-            {% else %}
-                <div style="width: 100%; height: 260px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                    Нет обложки
-                </div>
-            {% endif %}
+  <div style="font-family: var(--font-crt); font-size: 0.78em; color: var(--text-dim);
+              letter-spacing: 0.25em; margin-bottom: 12px;">
+    // ПЕРСОНАЛЬНЫЙ АРХИВ //
+  </div>
+  <h2 style="margin-bottom: 30px; font-size: 1.1em; letter-spacing: 0.3em;">
+    Мои закладки
+  </h2>
+
+  {% if comics %}
+    <div class="comic-grid">
+      {% for comic in comics %}
+        <div class="comic-card">
+          {% if comic.cover_image %}
+            <img src="{{ comic.cover_image }}" alt="{{ comic.title }}">
+          {% else %}
+            <div style="width: 100%; height: 260px; background: var(--bg3);
+                        display: flex; align-items: center; justify-content: center;
+                        color: var(--green-dark); font-family: var(--font-crt);
+                        font-size: 0.85em; letter-spacing: 0.1em; flex-direction: column; gap: 8px;">
+              <span style="font-size: 2em; opacity:0.3;">◈</span>
+              [NO_COVER]
+            </div>
+          {% endif %}
+          <div class="info">
             <h4><a href="/comics/{{ comic.id }}">{{ comic.title }}</a></h4>
-            <p>Автор: {{ comic.author.username if comic.author else 'Неизвестен' }}</p>
+            <p>
+              <span style="color: var(--green-dark);">Авт:</span>
+              {{ comic.author.username if comic.author else 'НЕИЗВЕСТЕН' }}
+            </p>
+          </div>
         </div>
-    {% endfor %}
+      {% endfor %}
     </div>
-{% else %}
-    <p>У вас пока нет закладок.</p>
-{% endif %}
+  {% else %}
+    <div style="padding: 60px; border: 1px dashed var(--border); text-align: center;">
+      <div style="font-family: var(--font-crt); font-size: 1.8em; color: var(--green-dark);
+                  margin-bottom: 12px;">[ АРХИВ ПУСТ ]</div>
+      <p style="color: var(--text-dim); font-size: 0.88em;">
+        У вас пока нет закладок.
+        <a href="/comics/">Перейти к каталогу ▷</a>
+      </p>
+    </div>
+  {% endif %}
+
+</div>
 {% endblock %}

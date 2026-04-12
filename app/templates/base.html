@@ -1,33 +1,47 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>{{ title }} — ComixHub</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }} — ComixHub</title>
+  <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <header>
-        <h1><a href="/">ComixHub</a></h1>
-        <nav>
-            <a href="/">Главная</a> |
-            <a href="/comics/">Комиксы</a> |
-            <a href="/comics/new">+ Новый комикс</a>
-            <a href="/comics/favorites">Мои закладки</a>
-            
-            {% if current_user %}
-                | Привет, <strong>{{ current_user.username }}</strong>
-                {% if current_user.is_author %}
-                    (Автор)
-                {% endif %}
-                | <a href="/auth/logout">Выход</a>
-            {% else %}
-                | <a href="/auth/register">Регистрация</a> |
-                <a href="/auth/login">Вход</a>
-            {% endif %}
-        </nav>
-    </header>
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+  <header>
+    <h1><a href="/">ComixHub</a></h1>
+    <nav>
+      <a href="/">// Главная</a>
+      <a href="/comics/">Комиксы</a>
+      <a href="/comics/favorites">Закладки</a>
+
+      {% if current_user %}
+        {% if current_user.is_author %}
+          <a href="/comics/new">+ Новый комикс</a>
+        {% endif %}
+        <span style="color: var(--text-dim); padding: 0 4px;">|</span>
+        <span>
+          <strong>{{ current_user.username }}</strong>
+          {% if current_user.is_author %}
+            &nbsp;<span class="badge author">Автор</span>
+          {% endif %}
+        </span>
+        <a href="/auth/logout">[ Выход ]</a>
+      {% else %}
+        <span style="color: var(--text-dim); padding: 0 4px;">|</span>
+        <a href="/auth/register">Регистрация</a>
+        <a href="/auth/login">[ Вход ]</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer style="text-align:center; padding: 24px; color: var(--text-dim);
+                 font-size: 0.72em; letter-spacing: 0.2em; border-top: 1px solid var(--border);
+                 margin-top: 60px; font-family: var(--font-crt);">
+    COMIXHUB_SYS v2.5.0 &nbsp;|&nbsp; CHANNEL SECURE &nbsp;|&nbsp; THIRD ECHELON APPROVED
+  </footer>
 </body>
 </html>

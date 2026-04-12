@@ -1,54 +1,108 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="max-width: 800px; margin: 0 auto;">
-    
-    <a href="/comics/" style="display: inline-block; margin-bottom: 20px;">← Назад к списку комиксов</a>
-    
-    <h1>{{ comic.title }}</h1>
-    
-    {% if comic.cover_image %}
-        <img src="{{ comic.cover_image }}" 
-             alt="{{ comic.title }}" 
-             style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-    {% else %}
-        <div style="width: 100%; height: 400px; background: #f0f0f0; border-radius: 12px; 
-                    display: flex; align-items: center; justify-content: center; font-size: 1.2em;">
-            Обложка отсутствует
+<div style="max-width: 860px; margin: 0 auto;">
+
+  <a href="/comics/" style="display: inline-flex; align-items: center; gap: 8px;
+                             margin-bottom: 28px; font-size: 0.8em; letter-spacing: 0.1em;
+                             color: var(--text-dim); text-transform: uppercase;">
+    ◁ Назад к списку
+  </a>
+
+  <!-- COMIC HEADER -->
+  <div style="display: grid; grid-template-columns: 280px 1fr; gap: 32px; margin-bottom: 36px;">
+    <div>
+      {% if comic.cover_image %}
+        <img src="{{ comic.cover_image }}" alt="{{ comic.title }}"
+             style="width: 100%; border-radius: 0; display: block;">
+      {% else %}
+        <div class="cover-placeholder" style="height: 380px; flex-direction: column; gap: 10px;">
+          <span style="font-size: 2.5em; opacity: 0.3;">◈</span>
         </div>
-    {% endif %}
-    
-    <div style="margin-top: 25px;">
-        <p><strong>Автор:</strong> #{{ comic.author_id }}</p>
-        {% if comic.description %}
-            <h3>Описание</h3>
-            <p style="line-height: 1.6;">{{ comic.description }}</p>
-        {% endif %}
+      {% endif %}
     </div>
 
-    <hr style="margin: 30px 0;">
-    
-    <h3>Главы комикса</h3>
-    
-    {% if comic.chapters %}
-        <ul>
-        {% for chapter in comic.chapters %}
-            <li>
-                <a href="/comics/{{ comic.id }}/chapters/{{ chapter.id }}/read">
-                    Глава {{ chapter.chapter_number }} — {{ chapter.title }}
-                </a>
-            </li>
-        {% endfor %}
-        </ul>
-    {% else %}
-        <p>Пока нет опубликованных глав.</p>
-    {% endif %}
+    <div style="padding-top: 4px;">
+      <div style="font-family: var(--font-crt); font-size: 0.75em; color: var(--text-dim);
+                  letter-spacing: 0.2em; margin-bottom: 12px;">
+        // ОБЪЕКТ: ДОСЬЕ
+      </div>
+      <h1 style="font-size: 1.5em; margin-bottom: 16px; line-height: 1.3;">{{ comic.title }}</h1>
 
-    {% if current_user and current_user.id == comic.author_id %}
-        <p style="margin-top: 15px;">
-            <a href="/comics/{{ comic.id }}/chapters/new">+ Добавить новую главу</a>
-        </p>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+        <div style="font-size: 0.82em; color: var(--text-dim);">
+          <span style="color: var(--green-dark); letter-spacing: 0.1em;">АВТОР ID:&nbsp;</span>
+          <span style="color: var(--green);">#{{ comic.author_id }}</span>
+        </div>
+        <div style="font-size: 0.82em; color: var(--text-dim);">
+          <span style="color: var(--green-dark); letter-spacing: 0.1em;">ГЛАВ:&nbsp;</span>
+          <span style="color: var(--text);">{{ comic.chapters|length }}</span>
+        </div>
+      </div>
+
+      {% if comic.description %}
+        <div style="border-left: 2px solid var(--green-dark); padding-left: 14px;
+                    margin-bottom: 24px;">
+          <p style="color: var(--text-dim); font-size: 0.88em; line-height: 1.7; margin: 0;">
+            {{ comic.description }}
+          </p>
+        </div>
+      {% endif %}
+
+      <!-- Bookmark form placeholder -->
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <form method="post" action="/comics/{{ comic.id }}/favorite" style="background:none;border:none;padding:0;">
+          <button type="submit" style="font-size: 0.68em; padding: 9px 18px;">
+            ♥ В закладки
+          </button>
+        </form>
+        {% if current_user and current_user.id == comic.author_id %}
+          <a href="/comics/{{ comic.id }}/chapters/new"
+             style="display: inline-flex; align-items: center; gap: 6px;
+                    border: 1px solid var(--border); color: var(--text-dim);
+                    font-family: var(--font-display); font-size: 0.68em;
+                    letter-spacing: 0.15em; text-transform: uppercase;
+                    padding: 9px 18px; transition: all 0.2s;">
+            + Добавить главу
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- CHAPTERS LIST -->
+  <div>
+    <div style="font-family: var(--font-crt); font-size: 0.75em; color: var(--text-dim);
+                letter-spacing: 0.2em; margin-bottom: 14px;">
+      // СПИСОК ГЛАВ
+    </div>
+    <h3 style="font-size: 0.85em; letter-spacing: 0.2em; margin-bottom: 16px;">
+      Главы комикса
+    </h3>
+
+    {% if comic.chapters %}
+      <ul>
+        {% for chapter in comic.chapters %}
+          <li>
+            <a href="/comics/{{ comic.id }}/chapters/{{ chapter.id }}/read">
+              <span style="color: var(--text-dim); font-size: 0.8em; min-width: 80px; display: inline-block;">
+                ГЛ. {{ '%02d'|format(chapter.chapter_number) }}
+              </span>
+              {{ chapter.title }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div style="padding: 24px; border: 1px dashed var(--border); text-align: center;">
+        <span style="color: var(--text-dim); font-family: var(--font-crt); font-size: 1.1em;">
+          [ НЕТ ОПУБЛИКОВАННЫХ ГЛАВ ]
+        </span>
+      </div>
     {% endif %}
-    
+  </div>
+
 </div>
 {% endblock %}
