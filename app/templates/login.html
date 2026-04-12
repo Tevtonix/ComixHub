@@ -1,16 +1,41 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Вход в аккаунт</h2>
+<div style="max-width: 460px; margin: 60px auto;">
 
-{% if request.query_params.get('error') == 'invalid' %}
-    <p style="color: red;">Неверное имя пользователя или пароль</p>
-{% endif %}
+  <div style="font-family: var(--font-crt); font-size: 0.78em; color: var(--text-dim);
+              letter-spacing: 0.25em; margin-bottom: 16px; text-align: center;">
+    // АВТОРИЗАЦИЯ ОПЕРАТИВНИКА //
+  </div>
 
-<form method="post" action="/auth/login">
-    <p><input type="text" name="username" placeholder="Имя пользователя" required></p>
-    <p><input type="password" name="password" placeholder="Пароль" required></p>
-    <button type="submit">Войти</button>
-</form>
-<p>Нет аккаунта? <a href="/auth/register">Зарегистрироваться</a></p>
+  <h2 style="text-align: center; margin-bottom: 30px; font-size: 1.1em; letter-spacing: 0.3em;">
+    ИДЕНТИФИКАЦИЯ
+  </h2>
+
+  {% if request.query_params.get('error') == 'invalid' %}
+    <div class="msg-error">
+      Неверные учётные данные. Доступ запрещён.
+    </div>
+  {% endif %}
+
+  <form method="post" action="/auth/login">
+    <p>
+      <label>// Позывной</label>
+      <input type="text" name="username" placeholder="username" required autocomplete="username">
+    </p>
+    <p>
+      <label>// Код доступа</label>
+      <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+    </p>
+    <div style="margin-top: 24px;">
+      <button type="submit" style="width: 100%;">[ ВОЙТИ В СИСТЕМУ ]</button>
+    </div>
+  </form>
+
+  <p style="text-align: center; margin-top: 20px; font-size: 0.82em; color: var(--text-dim);">
+    Нет аккаунта?
+    <a href="/auth/register" style="letter-spacing: 0.1em;">[ РЕГИСТРАЦИЯ ]</a>
+  </p>
+
+</div>
 {% endblock %}

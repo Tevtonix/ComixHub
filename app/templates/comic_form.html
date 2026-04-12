@@ -1,30 +1,43 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Опубликовать новый комикс</h2>
+<div style="max-width: 560px; margin: 40px auto;">
 
-{% if current_user %}
-    <p>Публикует: <strong>{{ current_user.username }}</strong></p>
-{% endif %}
+  <div style="font-family: var(--font-crt); font-size: 0.78em; color: var(--text-dim);
+              letter-spacing: 0.25em; margin-bottom: 14px;">
+    // ЗАГРУЗКА НОВОГО ОБЪЕКТА //
+  </div>
 
-<form method="post" action="/comics/" enctype="multipart/form-data">
+  <h2 style="margin-bottom: 6px; font-size: 1.1em; letter-spacing: 0.25em;">
+    Публикация комикса
+  </h2>
+
+  {% if current_user %}
+    <p style="color: var(--text-dim); font-size: 0.8em; margin-bottom: 28px;">
+      Оперативник: <strong>{{ current_user.username }}</strong>
+    </p>
+  {% endif %}
+
+  <form method="post" action="/comics/" enctype="multipart/form-data">
     <p>
-        <label>Название комикса:<br>
-            <input type="text" name="title" required style="width: 400px;">
-        </label>
+      <label>// Название</label>
+      <input type="text" name="title" required placeholder="название комикса">
     </p>
     <p>
-        <label>Описание:<br>
-            <textarea name="description" rows="5" style="width: 400px;"></textarea>
-        </label>
+      <label>// Описание</label>
+      <textarea name="description" rows="5" placeholder="краткое описание объекта..."></textarea>
     </p>
     <p>
-        <label>Обложка (изображение):<br>
-            <input type="file" name="cover" accept="image/*">
-        </label>
+      <label>// Обложка (изображение)</label>
+      <input type="file" name="cover" accept="image/*">
     </p>
-    <button type="submit">Опубликовать комикс</button>
-</form>
+    <div style="margin-top: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+      <button type="submit">[ ОПУБЛИКОВАТЬ ]</button>
+      <a href="/comics/" style="color: var(--text-dim); font-size: 0.8em; letter-spacing: 0.1em;">
+        ◁ Отмена
+      </a>
+    </div>
+  </form>
 
-<a href="/comics/">← Назад к списку</a>
+</div>
 {% endblock %}
