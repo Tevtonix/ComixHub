@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Мои закладки</h2>
+
+{% if comics %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px;">
+    {% for comic in comics %}
+        <div style="border: 1px solid #ddd; padding: 12px; border-radius: 12px;">
+            {% if comic.cover_image %}
+                <img src="{{ comic.cover_image }}" alt="{{ comic.title }}" 
+                     style="width: 100%; height: 260px; object-fit: cover; border-radius: 8px;">
+            {% else %}
+                <div style="width: 100%; height: 260px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    Нет обложки
+                </div>
+            {% endif %}
+            <h4><a href="/comics/{{ comic.id }}">{{ comic.title }}</a></h4>
+            <p>Автор: {{ comic.author.username if comic.author else 'Неизвестен' }}</p>
+        </div>
+    {% endfor %}
+    </div>
+{% else %}
+    <p>У вас пока нет закладок.</p>
+{% endif %}
+{% endblock %}

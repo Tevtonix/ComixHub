@@ -1,0 +1,174 @@
+/* ==================== Общие стили ==================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    line-height: 1.6;
+}
+
+header {
+    background: linear-gradient(135deg, #6b21a8, #9333ea);
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+header h1 a {
+    color: white;
+    text-decoration: none;
+}
+
+nav {
+    margin-top: 10px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin: 0 12px;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+nav a:hover {
+    opacity: 0.8;
+}
+
+/* ==================== Основной контент ==================== */
+main {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+/* Карточки комиксов */
+.comic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.comic-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.comic-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 25px rgba(107, 33, 168, 0.15);
+}
+
+.comic-card img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+}
+
+.comic-card .info {
+    padding: 16px;
+}
+
+.comic-card h4 {
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+.comic-card h4 a {
+    color: #333;
+    text-decoration: none;
+}
+
+.comic-card h4 a:hover {
+    color: #6b21a8;
+}
+
+.comic-card p {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+/* Формы */
+form input[type="text"],
+form input[type="email"],
+form input[type="password"],
+form textarea,
+form select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 1rem;
+}
+
+form input:focus,
+form textarea:focus,
+form select:focus {
+    border-color: #9333ea;
+    outline: none;
+}
+
+button {
+    background: #6b21a8;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #7e22ce;
+}
+
+/* Страница чтения главы */
+.chapter-page img {
+    max-width: 100%;
+    border-radius: 12px;
+    margin-bottom: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Комментарии */
+.comment {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.comment strong {
+    color: #6b21a8;
+}
+
+/* ==================== Адаптивность ==================== */
+@media (max-width: 768px) {
+    .comic-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+    
+    header h1 {
+        font-size: 1.7rem;
+    }
+}
