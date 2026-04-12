@@ -19,21 +19,34 @@ UPLOAD_DIR_COVERS.mkdir(parents=True, exist_ok=True)
 UPLOAD_DIR_CHAPTERS.mkdir(parents=True, exist_ok=True)
 
 
-# ====================== Список комиксов ======================
+# ====================== Список комиксов + Поиск ======================
 @router.get("/", response_class=HTMLResponse)
 async def list_comics(
     request: Request,
+    q: Optional[str] = None,                    # параметр поиска
     current_user: Optional[User] = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    comics = session.exec(select(Comic)).all()
+    query = select(Comic).join(User, Comic.author_id == User.id)
+    
+    if q and q.strip():
+        search = f"%{q.strip()}%"
+        query = query.where(
+            (Comic.title.ilike(search)) | 
+            (Comic.description.ilike(search)) |
+            (User.username.ilike(search))
+        )
+    
+    comics = session.exec(query).all()
+    
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
             "comics": comics,
             "current_user": current_user,
-            "title": "Все комиксы"
+            "title": "Все комиксы",
+            "search_query": q or ""
         }
     )
 
@@ -46,7 +59,10 @@ async def get_comic(
     current_user: Optional[User] = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
-    comic = session.exec(select(Comic).where(Comic.id == comic_id)).first()
+    comic = session.exec(
+        select(Comic).where(Comic.id == comic_id).join(User, Comic.author_id == User.id)
+    ).first()
+    
     if not comic:
         raise HTTPException(status_code=404, detail="Комикс не найден")
 
@@ -186,3 +202,60 @@ async def add_comment(
         url=f"/comics/{comic_id}/chapters/{chapter_id}/read", 
         status_code=303
     )
+
+# ====================== Закладки ======================
+
+@router.post("/{comic_id}/favorite")
+async def toggle_favorite(
+    comic_id: int,
+    current_user: Optional[User] = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Необходимо войти в аккаунт")
+
+    # Проверяем, есть ли уже закладка
+    existing = session.exec(
+        select(Favorite).where(
+            Favorite.user_id == current_user.id,
+            Favorite.comic_id == comic_id
+        )
+    ).first()
+
+    if existing:
+        # Удаляем из закладок
+        session.delete(existing)
+        session.commit()
+        action = "removed"
+    else:
+        # Добавляем в закладки
+        favorite = Favorite(user_id=current_user.id, comic_id=comic_id)
+        session.add(favorite)
+        session.commit()
+        action = "added"
+
+    return RedirectResponse(url=f"/comics/{comic_id}", status_code=303)
+
+
+# Страница "Мои закладки"
+@router.get("/favorites", response_class=HTMLResponse)
+async def my_favorites(
+    request: Request,
+    current_user: Optional[User] = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Необходимо войти в аккаунт")
+
+    favorites = session.exec(
+        select(Comic)
+        .join(Favorite, Comic.id == Favorite.comic_id)
+        .where(Favorite.user_id == current_user.id)
+    ).all()
+
+    return templates.TemplateResponse("favorites.html", {
+        "request": request,
+        "comics": favorites,
+        "current_user": current_user,
+        "title": "Мои закладки"
+    })

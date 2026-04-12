@@ -8,6 +8,13 @@
     </a>
 
     <h1>Глава {{ chapter.chapter_number }} — {{ chapter.title }}</h1>
+    
+    <!-- Средний рейтинг -->
+    {% if chapter.average_rating() > 0 %}
+        <p style="font-size: 1.3em; margin: 10px 0;">
+            ⭐ Средний рейтинг: <strong>{{ chapter.average_rating() }}</strong> / 5
+        </p>
+    {% endif %}
 
     <!-- Страницы главы -->
     {% if pages %}
@@ -24,28 +31,28 @@
 
     <hr style="margin: 40px 0;">
 
-    <!-- Форма добавления комментария -->
+    <!-- Форма комментария -->
     {% if current_user %}
-        <h3>Оставить комментарий и оценку</h3>
+        <h3>Оставить отзыв</h3>
         <form method="post" action="/comics/{{ comic_id }}/chapters/{{ chapter.id }}/comment">
-            <textarea name="text" rows="4" placeholder="Напишите ваш комментарий..." style="width: 100%;"></textarea>
+            <textarea name="text" rows="4" placeholder="Что вы думаете об этой главе?" style="width: 100%;"></textarea>
             
             <p>
-                <label>Оценка (от 1 до 5): 
-                    <select name="rating">
+                <label>Оценка: 
+                    <select name="rating" style="padding: 5px;">
                         <option value="">Без оценки</option>
-                        <option value="5">5 — Отлично</option>
-                        <option value="4">4 — Хорошо</option>
-                        <option value="3">3 — Нормально</option>
-                        <option value="2">2 — Так себе</option>
-                        <option value="1">1 — Плохо</option>
+                        <option value="5">5 ★ — Отлично</option>
+                        <option value="4">4 ★ — Хорошо</option>
+                        <option value="3">3 ★ — Нормально</option>
+                        <option value="2">2 ★ — Средне</option>
+                        <option value="1">1 ★ — Плохо</option>
                     </select>
                 </label>
             </p>
-            <button type="submit">Опубликовать комментарий</button>
+            <button type="submit">Опубликовать</button>
         </form>
     {% else %}
-        <p><a href="/auth/login">Войдите</a>, чтобы оставить комментарий.</p>
+        <p><a href="/auth/login">Войдите</a>, чтобы оставить комментарий и оценку.</p>
     {% endif %}
 
     <hr style="margin: 40px 0;">
@@ -57,10 +64,10 @@
             <div style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px;">
                 <strong>{{ comment.user.username }}</strong>
                 {% if comment.rating %}
-                    <span style="color: gold;"> ★{{ comment.rating }}</span>
+                    <span style="color: gold; font-size: 1.2em;"> ★{{ comment.rating }}</span>
                 {% endif %}
                 <small style="float: right; color: #666;">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
-                <p>{{ comment.text }}</p>
+                <p style="margin-top: 8px;">{{ comment.text }}</p>
             </div>
         {% endfor %}
     {% else %}
