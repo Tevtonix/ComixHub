@@ -49,10 +49,10 @@ class Chapter(SQLModel, table=True):
             return []
         try:
             return json.loads(self.pages)
-        except:
+        except Exception:
             return []
 
-def average_rating(self) -> float:
+    def average_rating(self) -> float:
         if not self.comments:
             return 0.0
         ratings = [c.rating for c in self.comments if c.rating is not None]
@@ -74,6 +74,7 @@ class Comment(SQLModel, table=True):
     user: Optional["User"] = Relationship()
     chapter: Optional["Chapter"] = Relationship(back_populates="comments")
 
+
 class Favorite(SQLModel, table=True):
     __table_args__ = {'extend_existing': True}
 
@@ -82,6 +83,5 @@ class Favorite(SQLModel, table=True):
     comic_id: int = Field(foreign_key="comic.id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    # Связи
     user: Optional["User"] = Relationship()
     comic: Optional["Comic"] = Relationship()
