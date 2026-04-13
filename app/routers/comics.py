@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request, Form, HTTPException, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 from typing import Optional, List
 import shutil
@@ -8,10 +9,11 @@ import uuid
 import json
 
 from app.database import get_session
-from app.models import Comic, User, Chapter, Comment   # ← добавили Comment
+from app.models import Comic, User, Chapter, Comment, Favorite
 from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/comics", tags=["comics"])
+templates = Jinja2Templates(directory="app/templates")
 
 UPLOAD_DIR_COVERS = Path("static/uploads/covers")
 UPLOAD_DIR_CHAPTERS = Path("static/uploads/chapters")
@@ -19,26 +21,65 @@ UPLOAD_DIR_COVERS.mkdir(parents=True, exist_ok=True)
 UPLOAD_DIR_CHAPTERS.mkdir(parents=True, exist_ok=True)
 
 
+# ====================== Мои закладки (ПЕРЕД /{comic_id}!) ======================
+@router.get("/favorites", response_class=HTMLResponse)
+async def my_favorites(
+    request: Request,
+    current_user: Optional[User] = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    if not current_user:
+        return RedirectResponse(url="/auth/login", status_code=303)
+
+    favorites = session.exec(
+        select(Comic)
+        .join(Favorite, Comic.id == Favorite.comic_id)
+        .where(Favorite.user_id == current_user.id)
+    ).all()
+
+    return templates.TemplateResponse("favorites.html", {
+        "request": request,
+        "comics": favorites,
+        "current_user": current_user,
+        "title": "Мои закладки"
+    })
+
+
+# ====================== Форма создания комикса ======================
+@router.get("/new", response_class=HTMLResponse)
+async def new_comic_form(
+    request: Request,
+    current_user: Optional[User] = Depends(get_current_user),
+):
+    if not current_user or not current_user.is_author:
+        raise HTTPException(status_code=403, detail="Только авторы могут создавать комиксы")
+    return templates.TemplateResponse("comic_form.html", {
+        "request": request,
+        "current_user": current_user,
+        "title": "Новый комикс"
+    })
+
+
 # ====================== Список комиксов + Поиск ======================
 @router.get("/", response_class=HTMLResponse)
 async def list_comics(
     request: Request,
-    q: Optional[str] = None,                    # параметр поиска
+    q: Optional[str] = None,
     current_user: Optional[User] = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     query = select(Comic).join(User, Comic.author_id == User.id)
-    
+
     if q and q.strip():
         search = f"%{q.strip()}%"
         query = query.where(
-            (Comic.title.ilike(search)) | 
+            (Comic.title.ilike(search)) |
             (Comic.description.ilike(search)) |
             (User.username.ilike(search))
         )
-    
+
     comics = session.exec(query).all()
-    
+
     return templates.TemplateResponse(
         "index.html",
         {
@@ -51,6 +92,41 @@ async def list_comics(
     )
 
 
+# ====================== Создание комикса ======================
+@router.post("/")
+async def create_comic(
+    request: Request,
+    title: str = Form(...),
+    description: Optional[str] = Form(None),
+    cover: Optional[UploadFile] = File(None),
+    current_user: Optional[User] = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    if not current_user or not current_user.is_author:
+        raise HTTPException(status_code=403, detail="Только авторы могут создавать комиксы")
+
+    cover_path = None
+    if cover and cover.filename:
+        ext = cover.filename.split(".")[-1].lower()
+        filename = f"{uuid.uuid4()}.{ext}"
+        file_path = UPLOAD_DIR_COVERS / filename
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(cover.file, buffer)
+        cover_path = f"/static/uploads/covers/{filename}"
+
+    comic = Comic(
+        title=title,
+        description=description,
+        cover_image=cover_path,
+        author_id=current_user.id
+    )
+    session.add(comic)
+    session.commit()
+    session.refresh(comic)
+
+    return RedirectResponse(url=f"/comics/{comic.id}", status_code=303)
+
+
 # ====================== Детальная страница комикса ======================
 @router.get("/{comic_id}", response_class=HTMLResponse)
 async def get_comic(
@@ -60,9 +136,9 @@ async def get_comic(
     session: Session = Depends(get_session)
 ):
     comic = session.exec(
-        select(Comic).where(Comic.id == comic_id).join(User, Comic.author_id == User.id)
+        select(Comic).where(Comic.id == comic_id)
     ).first()
-    
+
     if not comic:
         raise HTTPException(status_code=404, detail="Комикс не найден")
 
@@ -122,10 +198,8 @@ async def create_chapter(
             ext = page.filename.split(".")[-1].lower()
             filename = f"{uuid.uuid4()}.{ext}"
             file_path = chapter_dir / filename
-
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(page.file, buffer)
-
             page_paths.append(f"/static/uploads/chapters/{comic_id}/{chapter_number}/{filename}")
 
     new_chapter = Chapter(
@@ -134,14 +208,13 @@ async def create_chapter(
         title=title,
         pages=json.dumps(page_paths)
     )
-
     session.add(new_chapter)
     session.commit()
 
     return RedirectResponse(url=f"/comics/{comic_id}", status_code=303)
 
 
-# ====================== Чтение главы + комментарии ======================
+# ====================== Чтение главы ======================
 @router.get("/{comic_id}/chapters/{chapter_id}/read", response_class=HTMLResponse)
 async def read_chapter(
     comic_id: int,
@@ -157,7 +230,6 @@ async def read_chapter(
 
     pages = chapter.get_pages()
 
-    # Загружаем комментарии
     comments = session.exec(
         select(Comment)
         .where(Comment.chapter_id == chapter_id)
@@ -194,17 +266,16 @@ async def add_comment(
         text=text,
         rating=rating
     )
-
     session.add(comment)
     session.commit()
 
     return RedirectResponse(
-        url=f"/comics/{comic_id}/chapters/{chapter_id}/read", 
+        url=f"/comics/{comic_id}/chapters/{chapter_id}/read",
         status_code=303
     )
 
-# ====================== Закладки ======================
 
+# ====================== Закладки (toggle) ======================
 @router.post("/{comic_id}/favorite")
 async def toggle_favorite(
     comic_id: int,
@@ -214,7 +285,6 @@ async def toggle_favorite(
     if not current_user:
         raise HTTPException(status_code=401, detail="Необходимо войти в аккаунт")
 
-    # Проверяем, есть ли уже закладка
     existing = session.exec(
         select(Favorite).where(
             Favorite.user_id == current_user.id,
@@ -223,39 +293,9 @@ async def toggle_favorite(
     ).first()
 
     if existing:
-        # Удаляем из закладок
         session.delete(existing)
-        session.commit()
-        action = "removed"
     else:
-        # Добавляем в закладки
-        favorite = Favorite(user_id=current_user.id, comic_id=comic_id)
-        session.add(favorite)
-        session.commit()
-        action = "added"
+        session.add(Favorite(user_id=current_user.id, comic_id=comic_id))
 
+    session.commit()
     return RedirectResponse(url=f"/comics/{comic_id}", status_code=303)
-
-
-# Страница "Мои закладки"
-@router.get("/favorites", response_class=HTMLResponse)
-async def my_favorites(
-    request: Request,
-    current_user: Optional[User] = Depends(get_current_user),
-    session: Session = Depends(get_session)
-):
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Необходимо войти в аккаунт")
-
-    favorites = session.exec(
-        select(Comic)
-        .join(Favorite, Comic.id == Favorite.comic_id)
-        .where(Favorite.user_id == current_user.id)
-    ).all()
-
-    return templates.TemplateResponse("favorites.html", {
-        "request": request,
-        "comics": favorites,
-        "current_user": current_user,
-        "title": "Мои закладки"
-    })
