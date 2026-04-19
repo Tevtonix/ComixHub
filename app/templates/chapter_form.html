@@ -3,36 +3,61 @@
 {% block content %}
 <div style="max-width: 560px; margin: 40px auto;">
 
-  <div style="font-family: var(--font-crt); font-size: 0.78em; color: var(--text-dim);
-              letter-spacing: 0.25em; margin-bottom: 14px;">
-    // ЗАГРУЗКА НОВОЙ ГЛАВЫ //
+  <div style="font-family: var(--font-crt); font-size: 0.78em; color: var(--text-dim); letter-spacing: 0.25em; margin-bottom: 14px;">
+    {% if chapter %}// РЕДАКТИРОВАНИЕ ГЛАВЫ //{% else %}// ЗАГРУЗКА НОВОЙ ГЛАВЫ //{% endif %}
   </div>
 
   <h2 style="margin-bottom: 6px; font-size: 1.1em; letter-spacing: 0.25em;">
-    Добавить главу
+    {% if chapter %}Редактировать главу{% else %}Добавить главу{% endif %}
   </h2>
   <p style="color: var(--text-dim); font-size: 0.82em; margin-bottom: 28px;">
     Объект: <strong>{{ comic.title }}</strong>
   </p>
 
-  <form method="post" action="/comics/{{ comic.id }}/chapters" enctype="multipart/form-data">
+  <form method="post"
+        action="{% if chapter %}/comics/{{ comic.id }}/chapters/{{ chapter.id }}/edit{% else %}/comics/{{ comic.id }}/chapters{% endif %}"
+        enctype="multipart/form-data">
+
     <p>
       <label>// Номер главы</label>
-      <input type="number" name="chapter_number" min="1" required placeholder="1">
+      <input type="number" name="chapter_number" min="1" required
+             value="{{ chapter.chapter_number if chapter else '' }}"
+             placeholder="1">
     </p>
     <p>
       <label>// Название главы</label>
-      <input type="text" name="title" required placeholder="название главы">
+      <input type="text" name="title" required
+             value="{{ chapter.title if chapter else '' }}"
+             placeholder="название главы">
     </p>
+
+    {% if chapter and existing_pages %}
+      <p>
+        <label>// Текущие страницы ({{ existing_pages|length }} шт.)</label>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; padding:12px; border:1px solid var(--border); background:var(--bg3); margin-top:6px;">
+          {% for page_url in existing_pages %}
+            <img src="{{ page_url }}" alt="стр. {{ loop.index }}"
+                 style="height:80px; width:auto; object-fit:cover; border:1px solid var(--border); filter: saturate(0.3) hue-rotate(80deg);">
+          {% endfor %}
+        </div>
+      </p>
+    {% endif %}
+
     <p>
-      <label>// Страницы (можно выбрать несколько)</label>
-      <input type="file" name="pages" multiple accept="image/*" required>
-      <span style="font-size: 0.72em; color: var(--text-dim); display: block; margin-top: 6px;">
-        Поддерживаемые форматы: JPG, PNG, WEBP
+      <label>
+        {% if chapter %}// Новые страницы (заменят текущие, если выбрать){% else %}// Страницы (можно выбрать несколько){% endif %}
+      </label>
+      <input type="file" name="pages" multiple accept=".jpg,.jpeg,.png,.webp,.gif"
+             {% if not chapter %}required{% endif %}>
+      <span style="font-size:0.72em; color:var(--text-dim); display:block; margin-top:6px;">
+        Разрешены: jpg, jpeg, png, webp, gif
       </span>
     </p>
+
     <div style="margin-top: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-      <button type="submit">[ ОПУБЛИКОВАТЬ ГЛАВУ ]</button>
+      <button type="submit">
+        {% if chapter %}[ СОХРАНИТЬ ]{% else %}[ ОПУБЛИКОВАТЬ ГЛАВУ ]{% endif %}
+      </button>
       <a href="/comics/{{ comic.id }}" style="color: var(--text-dim); font-size: 0.8em; letter-spacing: 0.1em;">
         ◁ Назад к комиксу
       </a>

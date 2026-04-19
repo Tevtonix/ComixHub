@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 460px; margin: 40px auto;">
+
+  <div style="font-family: var(--font-crt); font-size: 0.78em; color: var(--text-dim); letter-spacing: 0.25em; margin-bottom: 14px;">
+    // РЕДАКТИРОВАНИЕ ПРОФИЛЯ //
+  </div>
+
+  <h2 style="margin-bottom: 6px; font-size: 1.1em; letter-spacing: 0.25em;">Профиль</h2>
+  <p style="color: var(--text-dim); font-size: 0.82em; margin-bottom: 28px;">
+    Оперативник: <strong>{{ current_user.username }}</strong>
+  </p>
+
+  {% if error %}
+    <div class="msg-error">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="/profile/me/edit">
+    <p>
+      <label>// Позывной (изменить нельзя)</label>
+      <input type="text" value="{{ current_user.username }}" disabled
+             style="opacity:0.5; cursor:not-allowed;">
+    </p>
+    <p>
+      <label>// Email</label>
+      <input type="email" name="email" value="{{ current_user.email }}" required
+             placeholder="operative@example.com">
+    </p>
+    <div style="margin-top: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+      <button type="submit">[ СОХРАНИТЬ ]</button>
+      <a href="/profile/{{ current_user.id }}" style="color: var(--text-dim); font-size: 0.8em; letter-spacing: 0.1em;">
+        ◁ Отмена
+      </a>
+    </div>
+  </form>
+
+</div>
+{% endblock %}
