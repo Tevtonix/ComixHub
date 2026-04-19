@@ -3,19 +3,12 @@
 {% block content %}
 <div style="max-width: 1200px; margin: 0 auto;">
 
-  <!-- WELCOME HEADER -->
   <div style="margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
-    <div style="font-family: var(--font-crt); font-size: 0.78em; color: var(--text-dim);
-                letter-spacing: 0.25em; margin-bottom: 8px;">
-      // OPERATIVE BRIEFING //
-    </div>
-    <h2 style="font-size: 1.4em; margin-bottom: 10px;">
-      Добро пожаловать в ComixHub
-    </h2>
+    <div style="font-family: var(--font-crt); font-size: 0.78em; color: var(--text-dim); letter-spacing: 0.25em; margin-bottom: 8px;">// OPERATIVE BRIEFING //</div>
+    <h2 style="font-size: 1.4em; margin-bottom: 10px;">Добро пожаловать в ComixHub</h2>
     {% if current_user %}
       <p style="color: var(--text-dim); font-size: 0.9em;">
-        Статус: <span style="color: var(--green);">АКТИВЕН</span>
-        &nbsp;|&nbsp; Оперативник: <strong>{{ current_user.username }}</strong>
+        Статус: <span style="color: var(--green);">АКТИВЕН</span> &nbsp;|&nbsp; Оперативник: <strong>{{ current_user.username }}</strong>
       </p>
     {% else %}
       <p style="color: var(--text-dim); font-size: 0.88em;">
@@ -24,45 +17,34 @@
     {% endif %}
   </div>
 
-  <!-- SEARCH -->
+  <!-- Поиск -->
   <form method="get" action="/comics/" style="margin-bottom: 36px;">
-    <div style="font-family: var(--font-crt); font-size: 0.75em; color: var(--text-dim);
-                letter-spacing: 0.2em; margin-bottom: 8px;">
-      // ПОИСК В БАЗЕ ДАННЫХ
-    </div>
+    <div style="font-family: var(--font-crt); font-size: 0.75em; color: var(--text-dim); letter-spacing: 0.2em; margin-bottom: 8px;">// ПОИСК В БАЗЕ ДАННЫХ</div>
     <div style="display: flex; max-width: 700px;">
-      <input type="text"
-             name="q"
-             value="{{ search_query }}"
+      <input type="text" name="q" value="{{ search_query }}"
              placeholder="ввод запроса: название, описание, автор..."
-             style="flex: 1; padding: 14px; font-size: 0.95em;
-                    border-radius: 0; border-right: none;">
-      <button type="submit">Поиск</button>
+             style="flex: 1; padding: 14px; font-size: 0.95em; border-right: none;">
+      <button type="submit">Поиск ▶</button>
     </div>
     {% if search_query %}
-      <a href="/comics/" style="margin-top: 10px; display: inline-block;
-                                color: var(--text-dim); font-size: 0.8em;
-                                letter-spacing: 0.1em;">
-        ◁ СБРОСИТЬ ЗАПРОС
-      </a>
+      <a href="/comics/" style="margin-top: 10px; display: inline-block; color: var(--text-dim); font-size: 0.8em; letter-spacing: 0.1em;">◁ СБРОСИТЬ</a>
     {% endif %}
   </form>
 
-  <!-- SECTION TITLE -->
+  <!-- Заголовок секции -->
   <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
     <span style="color: var(--green-dark); font-family: var(--font-crt); font-size: 1.2em;">//</span>
     <h3 style="font-size: 0.9em; letter-spacing: 0.2em;">
       {{ "РЕЗУЛЬТАТЫ: " ~ search_query if search_query else "ДОСТУПНЫЕ ОБЪЕКТЫ" }}
     </h3>
-    {% if comics %}
-      <span style="color: var(--text-dim); font-family: var(--font-crt);
-                   font-size: 0.8em; margin-left: auto;">
-        Найдено: {{ comics|length }}
+    {% if total is defined %}
+      <span style="color: var(--text-dim); font-family: var(--font-crt); font-size: 0.8em; margin-left: auto;">
+        Найдено: {{ total }}
       </span>
     {% endif %}
   </div>
 
-  <!-- COMICS GRID -->
+  <!-- Сетка комиксов -->
   {% if comics %}
     <div class="comic-grid">
       {% for comic in comics %}
@@ -70,39 +52,72 @@
           {% if comic.cover_image %}
             <img src="{{ comic.cover_image }}" alt="{{ comic.title }}">
           {% else %}
-            <div style="width: 100%; height: 300px; background: var(--bg3);
-                        display: flex; align-items: center; justify-content: center;
-                        color: var(--green-dark); font-family: var(--font-crt);
-                        font-size: 0.9em; letter-spacing: 0.1em; flex-direction: column; gap: 8px;">
-              <span style="font-size: 2em; opacity:0.3;">◈</span>
-              [NO_COVER_DATA]
+            <div style="width:100%; height:300px; background:var(--bg3); display:flex; align-items:center; justify-content:center; color:var(--green-dark); font-family:var(--font-crt); font-size:0.85em; flex-direction:column; gap:8px;">
+              <span style="font-size:2em; opacity:0.3;">◈</span>
+              [NO_COVER]
             </div>
           {% endif %}
           <div class="info">
             <h4><a href="/comics/{{ comic.id }}">{{ comic.title }}</a></h4>
             <p>
-              <span style="color: var(--green-dark);">Авт:</span>
-              {{ comic.author.username if comic.author else 'НЕИЗВЕСТЕН' }}
+              <span style="color:var(--green-dark);">Авт:</span>
+              <a href="/profile/{{ comic.author_id }}" style="color:var(--text-dim);">
+                {{ comic.author.username if comic.author else 'НЕИЗВЕСТЕН' }}
+              </a>
             </p>
             {% if comic.description %}
-              <p style="margin-top: 8px; font-size: 0.8em; color: var(--text-dim);">
-                {{ comic.description|truncate(90) }}
-              </p>
+              <p style="margin-top:6px; font-size:0.8em; color:var(--text-dim);">{{ comic.description|truncate(80) }}</p>
             {% endif %}
           </div>
         </div>
       {% endfor %}
     </div>
-  {% else %}
-    <div style="text-align: center; padding: 60px 20px; border: 1px dashed var(--border);">
-      <div style="font-family: var(--font-crt); font-size: 1.8em; color: var(--green-dark);
-                  margin-bottom: 12px;">[ НЕТ ДАННЫХ ]</div>
-      <p style="color: var(--text-dim); font-size: 0.9em;">
-        {% if search_query %}
-          Записей по запросу «{{ search_query }}» не обнаружено.
-        {% else %}
-          База пуста. Станьте первым оперативником-автором.
+
+    <!-- Пагинация -->
+    {% if total_pages is defined and total_pages > 1 %}
+      <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:40px; flex-wrap:wrap;">
+        {% if page > 1 %}
+          <a href="?{{ 'q=' ~ search_query ~ '&' if search_query }}page={{ page - 1 }}"
+             style="border:1px solid var(--border); padding:8px 14px; font-family:var(--font-display); font-size:0.7em; letter-spacing:0.1em; color:var(--text-dim); text-transform:uppercase; transition:all 0.2s;"
+             onmouseover="this.style.borderColor='var(--green-dim)'; this.style.color='var(--green)'"
+             onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-dim)'">
+            ◁ ПРЕД
+          </a>
         {% endif %}
+
+        {% for p in range(1, total_pages + 1) %}
+          {% if p == page %}
+            <span style="border:1px solid var(--green); padding:8px 14px; font-family:var(--font-display); font-size:0.7em; letter-spacing:0.1em; color:var(--green); text-shadow:0 0 6px var(--green); background:rgba(0,255,65,0.08);">{{ p }}</span>
+          {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+            <a href="?{{ 'q=' ~ search_query ~ '&' if search_query }}page={{ p }}"
+               style="border:1px solid var(--border); padding:8px 14px; font-family:var(--font-display); font-size:0.7em; letter-spacing:0.1em; color:var(--text-dim); text-transform:uppercase; transition:all 0.2s;"
+               onmouseover="this.style.borderColor='var(--green-dim)'; this.style.color='var(--green)'"
+               onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-dim)'">{{ p }}</a>
+          {% elif p == page - 3 or p == page + 3 %}
+            <span style="color:var(--text-dim); padding:0 4px;">…</span>
+          {% endif %}
+        {% endfor %}
+
+        {% if page < total_pages %}
+          <a href="?{{ 'q=' ~ search_query ~ '&' if search_query }}page={{ page + 1 }}"
+             style="border:1px solid var(--border); padding:8px 14px; font-family:var(--font-display); font-size:0.7em; letter-spacing:0.1em; color:var(--text-dim); text-transform:uppercase; transition:all 0.2s;"
+             onmouseover="this.style.borderColor='var(--green-dim)'; this.style.color='var(--green)'"
+             onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-dim)'">
+            СЛЕД ▷
+          </a>
+        {% endif %}
+      </div>
+      <div style="text-align:center; margin-top:10px; font-family:var(--font-crt); font-size:0.72em; color:var(--text-dim);">
+        Стр. {{ page }} / {{ total_pages }}
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div style="text-align:center; padding:60px 20px; border:1px dashed var(--border);">
+      <div style="font-family:var(--font-crt); font-size:1.8em; color:var(--green-dark); margin-bottom:12px;">[ НЕТ ДАННЫХ ]</div>
+      <p style="color:var(--text-dim); font-size:0.9em;">
+        {% if search_query %}Записей по запросу «{{ search_query }}» не обнаружено.
+        {% else %}База пуста. Станьте первым оперативником-автором.{% endif %}
       </p>
     </div>
   {% endif %}

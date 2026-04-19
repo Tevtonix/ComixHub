@@ -16,15 +16,15 @@
 
       {% if current_user %}
         {% if current_user.is_author %}
-          <a href="/comics/new">+ Новый комикс</a>
+          <a href="/comics/new">+ Комикс</a>
         {% endif %}
         <span style="color: var(--text-dim); padding: 0 4px;">|</span>
-        <span>
+        <a href="/profile/{{ current_user.id }}" style="display:inline-flex; align-items:center; gap:6px;">
           <strong>{{ current_user.username }}</strong>
           {% if current_user.is_author %}
-            &nbsp;<span class="badge author">Автор</span>
+            <span class="badge author">Автор</span>
           {% endif %}
-        </span>
+        </a>
         <a href="/auth/logout">[ Выход ]</a>
       {% else %}
         <span style="color: var(--text-dim); padding: 0 4px;">|</span>
